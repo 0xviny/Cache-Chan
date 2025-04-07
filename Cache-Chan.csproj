@@ -1,0 +1,16 @@
+﻿<PropertyGroup>
+  <TargetFramework>net8.0</TargetFramework>
+  <RootNamespace>Cache_Chan</RootNamespace>
+  <ImplicitUsings>enable</ImplicitUsings>
+  <Nullable>enable</Nullable>
+  <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+
+  <PackageId>Cache.Chan</PackageId>
+  <Version>1.0.0</Version>
+  <Authors>thinx</Authors>
+  <Company>thinx</Company>
+  <Description>Uma biblioteca de cache flexível com suporte a políticas de expiração e LRU.</Description>
+  <PackageTags>cache lru memorycache dotnet redis</PackageTags>
+  <RepositoryUrl>https://github.com/seu-user/Cache-Chan</RepositoryUrl>
+  <PackageLicenseExpression>MIT</PackageLicenseExpression>
+</PropertyGroup>
