@@ -1,16 +1,28 @@
-﻿<PropertyGroup>
-  <TargetFramework>net8.0</TargetFramework>
-  <RootNamespace>Cache_Chan</RootNamespace>
-  <ImplicitUsings>enable</ImplicitUsings>
-  <Nullable>enable</Nullable>
-  <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PackageId>Cache.Chan</PackageId>
-  <Version>1.0.0</Version>
-  <Authors>thinx</Authors>
-  <Company>thinx</Company>
-  <Description>Uma biblioteca de cache flexível com suporte a políticas de expiração e LRU.</Description>
-  <PackageTags>cache lru memorycache dotnet redis</PackageTags>
-  <RepositoryUrl>https://github.com/seu-user/Cache-Chan</RepositoryUrl>
-  <PackageLicenseExpression>MIT</PackageLicenseExpression>
-</PropertyGroup>
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>Cache_Chan</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <!-- Metadados NuGet -->
+    <PackageId>CacheChan.Core</PackageId>
+    <Version>1.0.2</Version>
+    <Authors>0xviny</Authors>
+    <Company>0xviny</Company>
+    <Description>Uma biblioteca de cache flexível com suporte a políticas de expiração e LRU.</Description>
+    <PackageTags>cache; lru; memorycache; dotnet; redis</PackageTags>
+    <RepositoryUrl>https://github.com/0xviny/Cache-Chan</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/0xviny/Cache-Chan</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>Primeira versão estável com suporte a políticas de expiração e LRU.</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+</Project>
