@@ -66,7 +66,7 @@ export default function AboutPage() {
                   eles construam aplicações mais rápidas e eficientes.
                 </p>
                 <p className="text-gray-300 text-lg mb-6">
-                  Fundada em 2022, a CacheChan nasceu da necessidade de uma solução de cache
+                  Fundada em 2025, a CacheChan nasceu da necessidade de uma solução de cache
                   distribuído que fosse fácil de usar, altamente configurável e com ferramentas de
                   monitoramento integradas.
                 </p>
