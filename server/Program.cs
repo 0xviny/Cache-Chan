@@ -15,6 +15,11 @@ DotNetEnv.Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.UseKestrel(options =>
+{
+    options.ListenAnyIP(80);
+});
+
 builder.Services.Configure<MongoSettings>(options =>
 {
     options.ConnectionString = Environment.GetEnvironmentVariable("MONGODB_URI");
