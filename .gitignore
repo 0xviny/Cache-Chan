@@ -3,3 +3,4 @@ obj
 example/bin
 example/obj
 .env
+*.zip
