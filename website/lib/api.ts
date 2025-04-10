@@ -1,7 +1,7 @@
 import Cookies from "js-cookie";
 
 // const API_BASE_URL = "http://localhost:5134";
-const API_BASE_URL = "https://cachechan.squareweb.app";
+const API_BASE_URL = "https://cachechan-api.squareweb.app";
 
 interface ApiResponse<T> {
   success: boolean;
