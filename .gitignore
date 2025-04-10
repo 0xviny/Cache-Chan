@@ -2,3 +2,4 @@ bin
 obj
 example/bin
 example/obj
+.env

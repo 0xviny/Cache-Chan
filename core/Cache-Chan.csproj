@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>Cache_Chan</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackageId>CacheChan.Core</PackageId>
+    <Version>1.1.0</Version>
+    <Authors>0xviny</Authors>
+    <Company>0xviny</Company>
+    <Description>Uma biblioteca de cache flexível com suporte a políticas de expiração e LRU.</Description>
+    <PackageTags>cache; lru; memorycache; dotnet; redis</PackageTags>
+    <RepositoryUrl>https://github.com/0xviny/Cache-Chan</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/0xviny/Cache-Chan</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>Primeira versão estável com suporte a políticas de expiração e LRU.</PackageReleaseNotes>
+    <UserSecretsId>a499316c-035b-4737-b605-1016d6e9aaa4</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="" />
+    <None Include="../LICENSE" Pack="true" PackagePath="" />
+  </ItemGroup>
+</Project>
