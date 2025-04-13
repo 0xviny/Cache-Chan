@@ -14,13 +14,9 @@ namespace CacheChan.Core.Extensions
         {
             services.Configure(configureOptions);
 
-            services.AddSingleton<CacheFactory>();
-
             services.AddSingleton<ICacheService>(provider =>
-            {
-                var cacheFactory = provider.GetRequiredService<CacheFactory>();
-                return cacheFactory.CreateCache();
-            });
+                CacheFactory.CreateCache()
+            );
 
             return services;
         }
