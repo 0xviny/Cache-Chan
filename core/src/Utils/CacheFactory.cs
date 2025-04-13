@@ -5,29 +5,24 @@ using CacheChan.Core.Services;
 
 namespace CacheChan.Core.Utils
 {
-    public class CacheFactory
+    public static class CacheFactory
     {
-        private readonly CacheOptions _options;
-
-        public CacheFactory(CacheOptions options)
+        public static ICacheService CreateCache(string apiKey = null!, CacheOptions options = null!)
         {
-            _options = options ?? throw new ArgumentNullException(nameof(options));
-        }
+            options ??= new CacheOptions();
 
-        public ICacheService CreateCache(string apiKey = null!)
-        {
             ICacheService cache;
 
-            if (_options.UseLru)
+            if (options.UseLru)
             {
                 cache = new LruCacheService(
-                    capacity: _options.LruCapacity,
-                    defaultExpiration: TimeSpan.FromMinutes(_options.DefaultExpirationMinutes)
+                    capacity: options.LruCapacity,
+                    defaultExpiration: TimeSpan.FromMinutes(options.DefaultExpirationMinutes)
                 );
             }
             else
             {
-                cache = new CacheService(_options);
+                cache = new CacheService(options);
             }
 
             if (!string.IsNullOrWhiteSpace(apiKey))
