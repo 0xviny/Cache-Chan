@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>CacheChan.Core</PackageId>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <Authors>0xviny</Authors>
     <Company>0xviny</Company>
     <Description>Uma biblioteca de cache flexível com suporte a políticas de expiração e LRU.</Description>
