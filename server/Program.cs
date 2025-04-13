@@ -4,12 +4,16 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using Cache_Chan.Core;
-using Cache_Chan.Implementations;
-using Cache_Chan.Monitoring;
+using CacheChan.Core;
+using CacheChan.Core.Interfaces;
+using CacheChan.Core.Services;
 using CacheChan.Server.Models;
 using CacheChan.Server.Services;
 using CacheChan.Server.DTOs;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using CacheChan.Core.Models;
 
 DotNetEnv.Env.Load();
 
@@ -31,6 +35,9 @@ builder.Services.AddSingleton<IUserService, UserService>();
 builder.Services.AddSingleton<UserDataService>();
 builder.Services.AddSingleton<TenantCacheService>();
 
+builder.Services.AddSingleton<IMetricsService, MetricsService>();
+builder.Services.AddSingleton<ILoggerService, LoggerService>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -47,7 +54,6 @@ app.MapPost("/register", async (RegisterRequest reg, IUserService userService) =
     try
     {
         var user = await userService.RegisterAsync(reg.Username, reg.Email, reg.Password);
-
         if (user == null)
             return Results.BadRequest(new { success = false, error = "Já existe uma conta com este e-mail." });
 
@@ -79,14 +85,15 @@ app.MapPost("/login", async (LoginRequest login, IUserService userService) =>
     var user = await userService.AuthenticateAsync(login.Email, login.Password);
     if (user == null)
     {
-        return Results.BadRequest(new
-        {
-            success = false,
-            error = "E-mail ou senha incorretos."
-        });
+        return Results.BadRequest(new { success = false, error = "E-mail ou senha incorretos." });
     }
-
-    return Results.Ok(new { success = true, apiKey = user.ApiKey, token = "dummy-jwt-token", user = new { id = user.Id, name = user.UserName, email = user.Email, role = user.Role } });
+    return Results.Ok(new
+    {
+        success = true,
+        apiKey = user.ApiKey,
+        token = "dummy-jwt-token",
+        user = new { id = user.Id, name = user.UserName, email = user.Email, role = user.Role }
+    });
 });
 
 app.Use(async (context, next) =>
@@ -119,6 +126,32 @@ app.Use(async (context, next) =>
     await next();
 });
 
+app.Use(async (context, next) =>
+{
+    await next();
+    if (context.Items["User"] is UserData user)
+    {
+        var metricsService = context.RequestServices.GetRequiredService<IMetricsService>();
+        try
+        {
+            var metric = new CacheChan.Core.Models.Metrics
+            {
+                Timestamp = DateTime.UtcNow,
+                Name = "HTTPRequest",
+                Value = 1,
+                Category = "HTTP"
+            };
+
+            await metricsService.SaveMetricAsync(user.ApiKey, metric);
+        }
+        catch (Exception ex)
+        {
+            var logger = context.RequestServices.GetRequiredService<CacheChan.Core.Interfaces.ILoggerService>();
+            logger.LogError("Erro ao registrar métrica de requisição.", ex);
+        }
+    }
+});
+
 app.MapGet("/users/me", async (HttpContext context, IUserService userService) =>
 {
     if (context.Items["User"] is not UserData user)
@@ -145,7 +178,6 @@ app.MapPut("/users/me", async (HttpContext context, IUserService userService, Up
 
     user.UserName = dto.Name;
     user.Email = dto.Email;
-
     await userService.UpdateUserAsync(user);
     return Results.Ok(new { success = true, user = new { id = user.Id, name = user.UserName, email = user.Email, role = user.Role } });
 });
@@ -170,7 +202,31 @@ app.MapGet("/cache/{key}", (string key, HttpContext context, TenantCacheService 
 
     var tenant = tenantCacheService.GetTenant(user.ApiKey);
     var value = tenant.MemoryCache.Get(key);
-    return value is null ? Results.NotFound(new { success = false, error = "Key not found." }) : Results.Ok(new { success = true, data = value });
+
+    if (value != null)
+    {
+        var metricsService = context.RequestServices.GetRequiredService<IMetricsService>();
+        _ = metricsService.SaveMetricAsync(user.ApiKey, new CacheChan.Core.Models.Metrics
+        {
+            Timestamp = DateTime.UtcNow,
+            Name = "CacheHit",
+            Value = 1,
+            Category = "Cache"
+        });
+        return Results.Ok(new { success = true, data = value });
+    }
+    else
+    {
+        var metricsService = context.RequestServices.GetRequiredService<IMetricsService>();
+        _ = metricsService.SaveMetricAsync(user.ApiKey, new CacheChan.Core.Models.Metrics
+        {
+            Timestamp = DateTime.UtcNow,
+            Name = "CacheMiss",
+            Value = 1,
+            Category = "Cache"
+        });
+        return Results.NotFound(new { success = false, error = "Key not found." });
+    }
 });
 
 app.MapPost("/cache", (CacheRequest req, HttpContext context, TenantCacheService tenantCacheService) =>
@@ -180,6 +236,15 @@ app.MapPost("/cache", (CacheRequest req, HttpContext context, TenantCacheService
 
     var tenant = tenantCacheService.GetTenant(user.ApiKey);
     tenant.MemoryCache.Set(req.Key, req.Value, req.TTL);
+
+    var metricsService = context.RequestServices.GetRequiredService<IMetricsService>();
+    _ = metricsService.SaveMetricAsync(user.ApiKey, new CacheChan.Core.Models.Metrics
+    {
+        Timestamp = DateTime.UtcNow,
+        Name = "CacheSet",
+        Value = 1,
+        Category = "Cache"
+    });
     return Results.Ok(new { success = true });
 });
 
@@ -190,6 +255,15 @@ app.MapDelete("/cache/{key}", (string key, HttpContext context, TenantCacheServi
 
     var tenant = tenantCacheService.GetTenant(user.ApiKey);
     tenant.MemoryCache.Remove(key);
+
+    var metricsService = context.RequestServices.GetRequiredService<IMetricsService>();
+    _ = metricsService.SaveMetricAsync(user.ApiKey, new CacheChan.Core.Models.Metrics
+    {
+        Timestamp = DateTime.UtcNow,
+        Name = "CacheRemove",
+        Value = 1,
+        Category = "Cache"
+    });
     return Results.Ok(new { success = true });
 });
 
@@ -201,6 +275,33 @@ app.MapGet("/cache", (HttpContext context, TenantCacheService tenantCacheService
     var tenant = tenantCacheService.GetTenant(user.ApiKey);
     var items = tenant.MemoryCache.List();
     return Results.Ok(new { success = true, data = items });
+});
+
+app.MapPost("/metrics", async (HttpContext context) =>
+{
+    try
+    {
+        var metrics = await context.Request.ReadFromJsonAsync<List<Metrics>>();
+
+        if (metrics == null || metrics.Count == 0)
+        {
+            return Results.BadRequest(new { success = false, error = "Nenhuma métrica informada." });
+        }
+
+        var mongoSettings = context.RequestServices.GetRequiredService<IOptions<MongoSettings>>().Value;
+        var client = new MongoClient(mongoSettings.ConnectionString);
+        var database = client.GetDatabase(mongoSettings.Database);
+        var collection = database.GetCollection<Metrics>("Metrics");
+
+        await collection.InsertManyAsync(metrics);
+
+        return Results.Ok(new { success = true, count = metrics.Count });
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Erro ao receber métricas: {ex.Message}");
+        return Results.Problem("Erro ao processar as métricas.");
+    }
 });
 
 app.MapGet("/metrics", (HttpContext context, TenantCacheService tenantCacheService) =>
@@ -246,7 +347,6 @@ app.MapPost("/users/regenerate-api-key", async (HttpContext context, IUserServic
     return Results.Ok(new { success = true, apiKey = newApiKey });
 });
 
-// Support Endpoints
 app.MapGet("/support/threads", async (HttpContext context, SupportService supportService) =>
 {
     if (context.Items["User"] is not UserData user)
@@ -276,14 +376,13 @@ app.MapPost("/support/threads", async (CreateThreadRequest req, HttpContext cont
     if (context.Items["User"] is not UserData user)
         return Results.Unauthorized();
 
-    // Fetch the full user to get the correct _id
     var fullUser = await userService.GetUserByApiKeyAsync(user.ApiKey);
     if (fullUser == null) return Results.Unauthorized();
 
     var thread = new SupportThread
     {
         Id = MongoDB.Bson.ObjectId.GenerateNewId().ToString(),
-        UserId = fullUser.Id, // Use the correct _id from the user document
+        UserId = fullUser.Id,
         UserName = user.UserName,
         UserEmail = user.Email,
         Subject = req.Subject,
