@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Database, Menu, X } from "lucide-react";
 import Cookies from "js-cookie";
 import { api } from "@/lib/api";
+import Image from "next/image";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,11 +18,11 @@ export function Navbar() {
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-dark-background/80 backdrop-blur-md border-b border-white/10">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto px-4 py-2 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link href="/" className="flex items-center">
-              <Database className="h-8 w-8 text-purple-neon" />
+              <Image src="/icon.jpeg" alt="Logo" width={60} height={60} className="rounded-full" />
               <span className="ml-2 text-xl font-bold text-white">CacheChan</span>
             </Link>
           </div>

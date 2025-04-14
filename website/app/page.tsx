@@ -169,39 +169,41 @@ export default function Home() {
                   {`// Instalar via NuGet
 Install-Package CacheChan
 
-// Configurar no Startup.cs
-services.AddCacheChan(options => {
-    options.UseRedis("connection-string");
-    options.SetDefaultTTL(TimeSpan.FromMinutes(30));
-    options.EnableLRU(maxItems: 1000);
-});
+// Criar cache com ou sem métricas
+var options = new CacheOptions
+{
+    UseLru = true,
+    LruCapacity = 1000,
+    DefaultExpirationMinutes = 30
+};
+
+// Opcional: passar uma API Key para ativar as métricas
+var cache = CacheFactory.CreateCache(apiKey: "minha-api-key", options: options);
 
 // Usar em qualquer lugar da aplicação
 public class ProductService
 {
     private readonly ICacheService _cache;
-    
+
     public ProductService(ICacheService cache)
     {
         _cache = cache;
     }
-    
+
     public async Task<Product> GetProductAsync(int id)
     {
-        // Tentar obter do cache primeiro
         var cacheKey = $"product:{id}";
         var product = await _cache.GetAsync<Product>(cacheKey);
-        
+
         if (product == null)
         {
             // Buscar do banco de dados
             product = await _dbContext.Products.FindAsync(id);
-            
-            // Armazenar no cache
-            await _cache.SetAsync(cacheKey, product, 
-                TimeSpan.FromHours(1));
+
+            // Armazenar no cache com TTL de 1 hora
+            await _cache.SetAsync(cacheKey, product, TimeSpan.FromHours(1));
         }
-        
+
         return product;
     }
 }`}
